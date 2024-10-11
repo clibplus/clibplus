@@ -2,8 +2,9 @@
 
 install:
 	sudo apt update -y && apt upgrade -y
+	sudo apt install gcc -y
 	sudo apt install gcc build-essential -y
-	# sudo apt install libssl-dev # Lib For Sockets
+	# sudo apt install libssl-dev -y # Lib For Sockets
 
 build:
 	# GC Lib
@@ -14,13 +15,13 @@ build:
 	gcc -c Thread/thread.c
 	ar rcs thread.a thread.o; rm thread.o; mv thread.a /usr/local/lib/libthread.a
 
-	# String Lib
-	gcc -c String/string.c
-	ar rcs string.a string.o; rm string.o; mv string.a /usr/local/lib/libstring.a
+	# str Lib
+	gcc -c String/str.c
+	ar rcs str.a str.o; rm str.o; mv str.a /usr/local/lib/libstr.a
 
 	# Array Lib
 	gcc -c Array/array.c
-	ar rcs array.a array.o; rm array.o; mv array.a /usr/local/lib/libarray.a
+	ar rcs array.a array.o; rm array.o; mv array.a /usr/local/lib/libarr.a
 
 	# Map Lib
 	gcc -c Map/map.c
@@ -31,3 +32,12 @@ build:
 	# File Lib
 	gcc -c OS/file.c
 	ar rcs file.a file.o; rm file.o; mv file.a /usr/local/lib/libfile.a
+
+setup:
+	# Move headers
+	mkdir -p /usr/local/include/clibs
+	cp -rf String/*.h /usr/local/include/clibs/str.h
+	cp -rf Array/*.h /usr/local/include/clibs/arr.h
+	cp -rf Map/*.h /usr/local/include/clibs/map.h
+	cp -rf GC/*.h /usr/local/include/clibs/gc.h
+	cp -rf Thread/*.h /usr/local/include/clibs/thread.h
