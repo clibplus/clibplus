@@ -1,4 +1,4 @@
-import sys, os, requests, subprocess
+import sys, os, requests, subprocess, time
 
 HELP_BANNER = rf"""
         cLib+ Package Manager | v0.0.1 [BETA]
@@ -14,12 +14,12 @@ ORG_URL = "https://github.com/orgs/clibplus"
 REPO_LIST_URL = "https://github.com/orgs/clibplus/repositories"
 
 cLib_DefaultPkgs = {
-	"String": "str",
-	"Array": "arr",
-	"Map": "map",
+	"str": "str",
+	"arr": "arr",
+	"map": "map",
 	"OS": {
-		"File": "file",
-		"Utils": "utils"
+		"file": "file",
+		"utils": "utils"
 	}
 }
 
@@ -46,15 +46,16 @@ class cLibPkgManager():
 
 		# check for libs
 		for pkg in cLib_DefaultPkgs:
-			if isinstance(cLib_DefaultPkgs[pkg], list):
-				package = Package(None, cLib_DefaultPkgs[pkg])
-				if os.path.exists(f"/usr/local/lib/{package.LibName}") and os.path.exists(f"/usr/local/include/{package.HeaderNamee}"):
-					self.InstalledPkgs.append(pkg)
-			elif isinstance(cLib_DefaultPkgs[pkg], dict):
+			if isinstance(cLib_DefaultPkgs[pkg], dict):
 				for sub_pkg in cLib_DefaultPkgs[pkg]:
 					package = Package(pkg, cLib_DefaultPkgs[pkg][sub_pkg])
 					if os.path.exists(f"/usr/local/lib/{package.SubName}/{package.LibName}") and os.path.exists(f"/usr/local/include/{package.SubName}/{package.HeaderName}"):
 						self.InstalledPkgs.append(package)
+				continue
+
+			package = Package(None, cLib_DefaultPkgs[pkg])
+			if os.path.exists(f"/usr/local/lib/{package.LibName}") and os.path.exists(f"/usr/local/include/{package.HeaderName}"):
+				self.InstalledPkgs.append(package)
 
 	""" Get the list of repo from github organization """
 	def get_repo_list(self) -> None:
@@ -71,7 +72,7 @@ class cLibPkgManager():
 	""" Ckeck for all installed libs """
 	def is_lib_installed(self, q: str) -> bool:
 		for arg in self.InstalledPkgs:
-			if arg.SubName == q or os.path.exists(f"/usr/local/lib/{arg.LibName}"):
+			if q == arg.FileName or q in arg.SubName:
 				return True
 
 		return False
@@ -109,11 +110,12 @@ class cLibPkgManager():
 					self.add_to_path(sub_name, name)
 
 		subprocess.getoutput("sudo ldconfig")
-		subprocess.getoutput(f"rm -r {sub_name}")
+		subprocess.getoutput(f"rm -rf {sub_name}")
 
 	def add_to_local_path(self, sub_name: str, name: str) -> None:
 		subprocess.getoutput(f"gcc -c {sub_name}/{name}.c")
 		subprocess.getoutput(f"ar rcs {name}.a {name}.o; rm {name}.o; mv {name}.a /usr/local/lib/lib{name}.a; mv {sub_name}/{name}.h /usr/local/include/")
+
 
 	def add_to_path(self, sub_name: str, name: str) -> None:
 		subprocess.getoutput(f"gcc -c {sub_name}/{name}.c")
