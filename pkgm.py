@@ -49,13 +49,11 @@ class cLibPkgManager():
 			if isinstance(cLib_DefaultPkgs[pkg], list):
 				package = Package(None, cLib_DefaultPkgs[pkg])
 				if os.path.exists(f"/usr/local/lib/{package.LibName}") and os.path.exists(f"/usr/local/include/{package.HeaderNamee}"):
-					print(f"Installed: {package.LibName}")
 					self.InstalledPkgs.append(pkg)
 			elif isinstance(cLib_DefaultPkgs[pkg], dict):
 				for sub_pkg in cLib_DefaultPkgs[pkg]:
 					package = Package(pkg, cLib_DefaultPkgs[pkg][sub_pkg])
 					if os.path.exists(f"/usr/local/lib/{package.SubName}/{package.LibName}") and os.path.exists(f"/usr/local/include/{package.SubName}/{package.HeaderName}"):
-						print(f"Installed: {package.SubName}{package.LibName}")
 						self.InstalledPkgs.append(package)
 
 	""" Get the list of repo from github organization """
@@ -137,6 +135,15 @@ for arg in sys.argv:
 	if arg == "--help":
 		print(HELP_BANNER)
 		exit(0)
+	elif arg == "-l":
+		i = 0
+		for pkg in pkg_mgr.InstalledPkgs:
+			if pkg.SubName:
+				print(f"[{i}]: {pkg.SubName}/{pkg.HeaderName}")
+			else:
+				print(f"[{i}]: {pkg.HeaderName}")
+
+			i += 1
 	elif arg == "-i":
 		v = get_flag_value(sys.argv, i)
 		if "[ x ]" in v:
