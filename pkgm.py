@@ -14,13 +14,25 @@ ORG_URL = "https://github.com/orgs/clibplus"
 REPO_LIST_URL = "https://github.com/orgs/clibplus/repositories"
 
 cLib_DefaultPkgs = {
-	"String": ["libstr.a", "str.h"],
-	"Array": ["libarr.a", "arr.h"],
-	"Map": ["libmap.a", "arr.h"],
+	"String": "str",
+	"Array": "arr",
+	"Map": "map",
 	"OS": {
-		"File": ["OS/libfile.a", "OS/file.h"]
+		"File": "file",
+		"Utils": "utils"
 	}
 }
+
+class Package():
+	def __init__(self, PKG: str, name: str):
+		self.FileName 		= name
+		self.SubName 		= PKG
+		self.LibName 		= f"lib{name}.a"
+		self.HeaderName 	= f"{name}.h"
+		self.SubPKG 		= False
+
+		if PKG: 
+			self.SubPKG = True
 
 class cLibPkgManager():
 	def __init__(self):
@@ -35,14 +47,16 @@ class cLibPkgManager():
 		# check for libs
 		for pkg in cLib_DefaultPkgs:
 			if isinstance(cLib_DefaultPkgs[pkg], list):
-				if os.path.exists(f"/usr/local/lib/{cLib_DefaultPkgs[pkg][0]}") and os.path.exists(f"/usr/local/include/{cLib_DefaultPkgs[pkg][1]}"):
-					print(f"[ + ] Found installed clibs sub-lib {pkg}....!")
+				package = Package(None, cLib_DefaultPkgs[pkg])
+				if os.path.exists(f"/usr/local/lib/{package.LibName}") and os.path.exists(f"/usr/local/include/{package.HeaderNamee}"):
+					print(f"Installed: {package.LibName}")
 					self.InstalledPkgs.append(pkg)
 			elif isinstance(cLib_DefaultPkgs[pkg], dict):
 				for sub_pkg in cLib_DefaultPkgs[pkg]:
-					if os.path.exists(f"/usr/local/lib/{cLib_DefaultPkgs[pkg][sub_pkg][0]}") and os.path.exists(f"/usr/local/include/{cLib_DefaultPkgs[pkg][sub_pkg][1]}"):
-						print(f"[ + ] Found installed clibs sub-lib {sub_pkg}....!")
-						self.InstalledPkgs.append(sub_pkg)
+					package = Package(pkg, cLib_DefaultPkgs[pkg][sub_pkg])
+					if os.path.exists(f"/usr/local/lib/{package.SubName}/{package.LibName}") and os.path.exists(f"/usr/local/include/{package.SubName}/{package.HeaderName}"):
+						print(f"Installed: {package.SubName}{package.LibName}")
+						self.InstalledPkgs.append(package)
 
 	""" Get the list of repo from github organization """
 	def get_repo_list(self) -> None:
@@ -56,39 +70,56 @@ class cLibPkgManager():
 			if "<a class=\"Text__StyledText-sc-17v1xeu-0 hWqAbU TitleHeader-module__inline--rL27T Title-module__anchor--SyQM6\"" in line:
 				self.RepoList.append(line.split(" ")[6].replace("href=", "").replace("\"", ""))
 
+	""" Ckeck for all installed libs """
 	def is_lib_installed(self, q: str) -> bool:
 		for arg in self.InstalledPkgs:
-			if arg == q:
+			if arg.SubName == q or os.path.exists(f"/usr/local/lib/{arg.LibName}"):
 				return True
 
 		return False
 
+	""" CHeck for all libs on the org repo list"""
 	def search_lib_in_repo(self, q: str):
 		for lib in self.RepoList:
 			if lib.endswith(q):
-				print(lib)
 				return True, lib
 
 		return False, ""
 
 	def install_lib(self, sub: str) -> bool:
 		sub_name = sub.split("/")[len(sub.split("/")) - 1]
-		os.system(f"git clone https://github.com{sub}")
+		subprocess.getoutput(f"git clone https://github.com{sub}")
 
 		file_count = int(subprocess.getoutput(f"ls {sub_name}/*.c | wc -l").split(" ")[0])
+		if file_count == 0:
+			print("[ x ] Error, Unable to find C Files...!")
+			exit(0)
+
 		files = os.listdir(sub_name)
 
 		if file_count > 1:
-			os.system(f"mkdir /usr/local/include/{sub_name}")
-			os.system(f"cp {sub_name}/*.h /usr/local/include/{sub_name}")
+			subprocess.getoutput(f"mkdir /usr/local/include/{sub_name}")
+			subprocess.getoutput(f"mkdir /usr/local/lib/{sub_name}")
+			subprocess.getoutput(f"cp {sub_name}/*.h /usr/local/include/{sub_name}/")
 
 		for file in files:
 			if ".c" in file:
 				name = file.replace(".c", "")
-				os.system(f"gcc -c {sub_name}/{file}")
-				os.system(f"ar rcs {name}.a {name}.o; rm {name}.o; mv {name}.a /usr/local/lib/lib{name}.a")
+				if file_count == 1:
+					self.add_to_local_path(sub_name, name)
+				else:
+					self.add_to_path(sub_name, name)
 
-		os.system("sudo ldconfig")
+		subprocess.getoutput("sudo ldconfig")
+		subprocess.getoutput(f"rm -r {sub_name}")
+
+	def add_to_local_path(self, sub_name: str, name: str) -> None:
+		subprocess.getoutput(f"gcc -c {sub_name}/{name}.c")
+		subprocess.getoutput(f"ar rcs {name}.a {name}.o; rm {name}.o; mv {name}.a /usr/local/lib/lib{name}.a; mv {sub_name}/{name}.h /usr/local/include/")
+
+	def add_to_path(self, sub_name: str, name: str) -> None:
+		subprocess.getoutput(f"gcc -c {sub_name}/{name}.c")
+		subprocess.getoutput(f"ar rcs {name}.a {name}.o; rm {name}.o; mv {name}.a /usr/local/lib/{sub_name}/lib{name}.a; mv {sub_name}/{name}.h /usr/local/include/{sub_name}/{name}.h")
 
 def get_flag_value(args: list, idx: int) -> str:
 	if idx + 1 >= len(args):
@@ -123,5 +154,6 @@ for arg in sys.argv:
 			exit(0)
 			
 		pkg_mgr.install_lib(lib)
+		print(f"[ + ] Lib: {v} was successfully installed")
 
 	i += 1
