@@ -1,3 +1,9 @@
+"""
+		[ Temporary Quick cLib+ Package Manager Write Up ]
+
+	@author: algo1337
+	@since: 4/11/24
+"""
 import sys, os, requests, subprocess, time
 
 HELP_BANNER = rf"""
@@ -15,8 +21,8 @@ REPO_LIST_URL = "https://github.com/orgs/clibplus/repositories"
 
 cLib_DefaultPkgs = {
 	"str": "str",
-	"arr": "arr",
-	"map": "map",
+	"Array": "arr",
+	"Map": "map",
 	"OS": {
 		"file": "file",
 		"utils": "utils"
@@ -72,8 +78,13 @@ class cLibPkgManager():
 	""" Ckeck for all installed libs """
 	def is_lib_installed(self, q: str) -> bool:
 		for arg in self.InstalledPkgs:
-			if q == arg.FileName or q in arg.SubName:
-				return True
+			if arg.FileName != None:
+				if q == arg.FileName:
+					return True
+
+			if arg.SubName != None:
+				if q in arg.SubName:
+					return True
 
 		return False
 
