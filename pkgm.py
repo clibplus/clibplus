@@ -26,6 +26,9 @@ cLib_DefaultPkgs = {
 	"OS": {
 		"file": "file",
 		"utils": "utils"
+	},
+	"Net": {
+		"socket": "socket"
 	}
 }
 
