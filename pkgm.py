@@ -179,4 +179,9 @@ for arg in sys.argv:
 		pkg_mgr.install_lib(lib)
 		print(f"[ + ] Lib: {v} was successfully installed")
 
+	elif arg == "-r":
+		for repo in pkg_mgr.RepoList:
+			print(f"Repo: {repo}")
+
+
 	i += 1
