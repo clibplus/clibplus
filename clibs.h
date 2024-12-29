@@ -1,15 +1,21 @@
 #pragma once
 
 #ifdef CLIB_TYPES
-  #include <clibs/str.h>
-  #include <clibs/arr.h>
-  #include <clibs/map.h>
+  #include <str.h>
+  #include <arr.h>
+  #include <map.h>
 #endif
 
 #ifdef CLIB_GC
-  #include <clibs/gc.h>
+  #include <gc.h>
 #endif
 
 #ifdef CLIB_THREADS
-  #include <clibs/thread.h>
+  #include <thread.h>
+#endif
+
+#ifdef CLIB_NET
+  #include <Net/socket.h>
+  #include <Net/request.h>
+  #include <Net/web.h>
 #endif
